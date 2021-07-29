@@ -62,3 +62,33 @@ Example of bash commands output:
         └── willjk
             └── okta-saml-express
 
+## WIP: clone-many
+
+clone ssh|https|org|user
+
+ssh and https currently work for github
+Add support for org or user:
+1. determine if org or user
+2. call correct api endpoint based on 1 to get list of repositories
+3. list all ssh and clone urls
+4. allow dynamic selection and clone concurrently after selected
+    1. space to select
+    2. return to proceed
+    3. confirm final list if > 1 selected
+    4. concurrent downloads using goroutines up to limit of #
+
+
+List repositories for org:
+```
+curl \                           
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/orgs/ORG/repos 
+```
+
+List repositories for user:
+```
+curl \                           
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/users/USER/repos
+
+```
