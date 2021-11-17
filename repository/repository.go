@@ -11,31 +11,27 @@ import (
 )
 
 // Clone the given gitURI into GITTK_PATH
-func Clone(repoURI string, exportBashOnly bool) (string, error) {
-	repoDir, repoDirErr := GetDir(repoURI)
+func Clone(target string) (string, error) {
+
+	repoDir, repoDirErr := GetDir(target)
 	if repoDirErr != nil {
 		return repoDir, repoDirErr
 	}
-	if !exportBashOnly {
-		err := os.MkdirAll(repoDir, os.ModePerm)
-		if err != nil {
-			return repoDir, fmt.Errorf("unable to create directory: %v", repoDir)
-		}
-		os.Chdir(repoDir)
-		cmd := exec.Command("git", "clone", repoURI, repoDir)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		startErr := cmd.Start()
-		if startErr != nil {
-			return repoDir, fmt.Errorf("unable to execute git clone")
-		}
-		cmd.Wait()
-		return repoDir, nil
+
+	err := os.MkdirAll(repoDir, os.ModePerm)
+	if err != nil {
+		return repoDir, fmt.Errorf("unable to create directory: %v", repoDir)
 	}
-	bash := fmt.Sprintf(`mkdir -p %v \
-	&& cd %v \
-	&& git clone %v %v`, repoDir, repoDir, repoURI, repoDir)
-	return bash, nil
+	os.Chdir(repoDir)
+	cmd := exec.Command("git", "clone", target, repoDir)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	startErr := cmd.Start()
+	if startErr != nil {
+		return repoDir, fmt.Errorf("unable to execute git clone")
+	}
+	cmd.Wait()
+	return repoDir, nil
 }
 
 // GetDir takes a git uri and returns the corresponding local folder
@@ -58,6 +54,10 @@ func GetDir(uri string) (string, error) {
 	}
 	fullDir := filepath.Join(repoDir, subDir)
 	return fullDir, nil
+}
+
+func GetTargetType(target string) (string, error) {
+
 }
 
 // Return subdirectory from different git URI types
