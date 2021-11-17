@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"./repository"
+	"j5n.dev/gittk/repository"
 )
 
 const usage = `
