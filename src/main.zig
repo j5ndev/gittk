@@ -1,20 +1,24 @@
-
 const std = @import("std");
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
-
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
     const stdout_file = std.io.getStdOut().writer();
     var bw = std.io.bufferedWriter(stdout_file);
     const stdout = bw.writer();
+    if (std.os.argv.len < 3) {
+        try stdout.print("Error: A command and an argument are needed.\n", .{});
+        try bw.flush();
+        std.process.exit(1);
+    }
+    const command = std.os.argv[1];
+    if (!std.mem.eql(u8, std.mem.span(command), "clone")) {
+        try stdout.print("Error: command '{s}' unknown.\n", .{command});
+        try bw.flush();
+        std.process.exit(1);
+    }
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // Don't forget to flush!
+    const argument = std.os.argv[2];
+    try stdout.print("Argument: {s}\n", .{argument});
+    try bw.flush();
 }
 
 test "simple test" {
@@ -23,4 +27,3 @@ test "simple test" {
     try list.append(42);
     try std.testing.expectEqual(@as(i32, 42), list.pop());
 }
-
