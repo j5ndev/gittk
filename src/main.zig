@@ -8,6 +8,8 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
+
     if (args.len < 3) {
         try stderr.print("A command and an argument are needed.\n", .{});
         std.process.exit(1);
