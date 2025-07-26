@@ -1,4 +1,5 @@
 const std = @import("std");
+pub const clone = @import("commands/clone.zig");
 
 pub const ArgsError = error{
     ArgsAlloc,
