@@ -13,11 +13,18 @@ pub fn main() !void {
     };
     defer std.process.argsFree(allocator, args);
 
-    const command = args[1];
-    if (std.mem.eql(u8, command, "clone")) {
-        std.debug.print("TODO: Command {s}\n", .{command});
-    } else {
-        std.debug.print("Error: Command \"{s}\" is unknown.\n", .{command});
-        std.process.exit(1);
+    const Commands = enum {
+        clone,
+        @"An unknown command",
+    };
+
+    const commandString= args[1];
+    const command = std.meta.stringToEnum(Commands, commandString) orelse .@"An unknown command";
+    switch (command) {
+        .clone => std.debug.print("TODO: Command {s}\n", .{commandString}),
+        .@"An unknown command" => {
+            std.debug.print("Error: Command \"{s}\" is unknown.\n", .{commandString});
+            std.process.exit(1);
+        },
     }
 }
