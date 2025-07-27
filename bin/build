@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+zig build test --summary new
+zig build --summary new

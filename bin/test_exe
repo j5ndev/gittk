@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+zig build test --summary new
+echo
+zig build --summary new
+echo
+zig-out/bin/gittk clone git@github.com:j5ndev/gittk.git
+echo
+zig-out/bin/gittk clone https://github.com/j5ndev/gittk.git
+echo
