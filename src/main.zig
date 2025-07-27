@@ -22,12 +22,22 @@ pub fn main() !void {
     const commandString = args[1];
     const command = std.meta.stringToEnum(Commands, commandString) orelse .@"An unknown command";
     switch (command) {
-        .clone => gittk.clone.execute(args) catch |err| {
-            switch (err) {
-                gittk.clone.CloneError.URIMissing => std.debug.print("Error: The URI for git clone command mustbe provided.\n", .{}),
-                gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{args[2]}),
-            }
-            std.process.exit(1);
+        .clone => {
+            //TODO: support more platforms
+            const homeDir = std.posix.getenv("HOME") orelse {
+                std.debug.print("Error: Unable to identify HOME directory", .{});
+                std.process.exit(1);
+            };
+            const projectDir = try std.fs.path.join(allocator, &[_][]const u8{ homeDir, "projects" });
+            gittk.clone.execute(args, projectDir, allocator) catch |err| {
+                switch (err) {
+                    gittk.clone.CloneError.MissingURI => std.debug.print("Error: The URI for git clone command must be provided.\n", .{}),
+                    gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{args[2]}),
+                    gittk.clone.CloneError.UnknownURI => std.debug.print("Error: The URI for the git clone command is in an unknown format.\n", .{}),
+                    else => std.debug.print("Error: An unexpected issue occurred.", .{}),
+                }
+                std.process.exit(1);
+            };
         },
         .@"An unknown command" => {
             std.debug.print("Error: Command \"{s}\" is unknown.\n", .{commandString});
