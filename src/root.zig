@@ -16,3 +16,7 @@ pub fn getArgs(allocator: std.mem.Allocator) ArgsError![][:0]u8 {
 
     return args;
 }
+
+test "Execute tests from submodules; includes tests of private members" {
+   _ = @import("commands/clone.zig");
+}

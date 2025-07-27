@@ -19,3 +19,12 @@ Clone repositories into a tree structure under $HOME/projects.
 ```sh
 zig-out/bin/gittk clone a/b/c
 ```
+
+## Test
+
+Execute all tests with the following command.
+
+```sh
+zig build test --summary new
+```
+

@@ -40,3 +40,21 @@ fn getSubDir(uri: []const u8, allocator: std.mem.Allocator) CloneError![]const u
     _ = std.mem.replace(u8, fragment, ":", "/", result);
     return result;
 }
+
+test "getSubDir correctly parses SSH URI " {
+    const uri = "git@github.com:j5ndev/gittk.git";
+    const allocator = std.testing.allocator;
+    const actual = try getSubDir(uri, allocator);
+    defer allocator.free(actual);
+    const expected = "github.com/j5ndev/gittk";
+    try std.testing.expectEqualStrings(expected, actual);
+}
+
+test "getSubDir correctly parses HTTPS URI " {
+    const uri = "https://github.com/j5ndev/gittk.git";
+    const allocator = std.testing.allocator;
+    const actual = try getSubDir(uri, allocator);
+    defer allocator.free(actual);
+    const expected = "github.com/j5ndev/gittk";
+    try std.testing.expectEqualStrings(expected, actual);
+}
