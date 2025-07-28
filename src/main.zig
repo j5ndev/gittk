@@ -34,6 +34,8 @@ pub fn main() !void {
                     gittk.clone.CloneError.MissingURI => std.debug.print("Error: The URI for git clone command must be provided.\n", .{}),
                     gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{args[2]}),
                     gittk.clone.CloneError.UnknownURI => std.debug.print("Error: The URI for the git clone command is in an unknown format.\n", .{}),
+                    gittk.clone.CloneError.ProcessSpawn => std.debug.print("Error: There was an issue executing the command.\n", .{}),
+                    gittk.clone.CloneError.ProcessWait => std.debug.print("Error: There was an issue waiting for the command to finish.\n", .{}),
                     else => std.debug.print("Error: An unexpected issue occurred.", .{}),
                 }
                 std.process.exit(1);
