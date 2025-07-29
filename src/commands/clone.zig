@@ -73,7 +73,7 @@ test "getSubDir correctly parses HTTPS URI " {
     try std.testing.expectEqualStrings(expected, actual);
 }
 
-test "getSubDir correctly zig repository " {
+test "getSubDir correctly parses zig repository URI " {
     // Tests an issue work around that prevents the return of git@github.com:ziglang/z
     const uri = "git@github.com:ziglang/zig.git";
     const allocator = std.testing.allocator;
