@@ -8,6 +8,7 @@ pub const CloneError = error{
     PathIssue,
     ProcessSpawn,
     ProcessWait,
+    TargetDirectory,
 };
 
 pub fn execute(args: [][:0]u8, projectDir: []const u8, allocator: std.mem.Allocator) CloneError!void {
@@ -27,7 +28,8 @@ pub fn execute(args: [][:0]u8, projectDir: []const u8, allocator: std.mem.Alloca
 
     // Output the target directory that was created or already existed
     // This output allows an easy way to cd into the target folder when the gittk clone command is used from a shell script
-    std.debug.print("\n{s}\n", .{targetDir});
+    var stdout = std.fs.File.stdout().writerStreaming(&.{});
+    stdout.interface.print("\n{s}\n", .{targetDir}) catch return CloneError.TargetDirectory;
 }
 
 // Parse URI to create subfolders
@@ -70,7 +72,6 @@ test "getSubDir correctly parses HTTPS URI " {
     const expected = "github.com/j5ndev/gittk";
     try std.testing.expectEqualStrings(expected, actual);
 }
-
 
 test "getSubDir correctly zig repository " {
     // Tests an issue work around that prevents the return of git@github.com:ziglang/z

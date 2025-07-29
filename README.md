@@ -85,3 +85,14 @@ bin/build
 bin/test_exe
 ```
 
+## Clone Shell Function
+
+Here is an example of a helper shell function to clone the repo and then cd into the directory.
+For example, you would add this snippet to your `.zshrc` file if you are using zsh.
+
+```sh
+clone () {
+    local TARGET=`gittk clone $@ | tail --lines=1`
+    cd $TARGET
+}
+```
