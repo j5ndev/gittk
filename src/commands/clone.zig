@@ -16,13 +16,16 @@ pub fn execute(args: [][:0]u8, projectDir: []const u8, allocator: std.mem.Alloca
     const uri = args[2];
 
     const subDir = try getSubDir(uri, allocator);
+    defer allocator.free(subDir);
     const targetDir = std.fs.path.join(allocator, &[_][]const u8{ projectDir, subDir }) catch return CloneError.PathIssue;
+    defer allocator.free(targetDir);
 
     // Execute clone command
     // If the repo already exists, a message like the following will be output:
     //   fatal: destination path '/home/mj/projects/github.com/j5ndev/gittk' already exists and is not an empty directory.
     const argv = [_][]const u8{ "git", "clone", uri, targetDir };
     var proc = std.process.Child.init(&argv, allocator);
+    // cleanup is done by calling wait().
     proc.spawn() catch return CloneError.ProcessSpawn;
     _ = proc.wait() catch return CloneError.ProcessWait;
 
@@ -32,11 +35,12 @@ pub fn execute(args: [][:0]u8, projectDir: []const u8, allocator: std.mem.Alloca
     stdout.interface.print("\n{s}\n", .{targetDir}) catch return CloneError.TargetDirectory;
 }
 
-// Parse URI to create subfolders
+// Parse URI to determine subfolders 
 // Example github URIs:
 //   git@github.com:j5ndev/gittk.git
 //   https://github.com/j5ndev/gittk.git
 fn getSubDir(uri: []const u8, allocator: std.mem.Allocator) CloneError![]const u8 {
+    //One call using ".git" caused an issue and these separate calls were the work around
     var fragment = std.mem.trimRight(u8, uri, "git");
     fragment = std.mem.trimRight(u8, fragment, ".");
     if (std.mem.startsWith(u8, uri, "git@")) {
