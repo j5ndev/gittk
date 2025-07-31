@@ -1,7 +1,6 @@
 const std = @import("std");
 
 pub const CloneError = error{
-    MissingURI,
     UnknownURI,
     TODOExecute,
     MemoryIssue,
@@ -11,9 +10,7 @@ pub const CloneError = error{
     TargetDirectory,
 };
 
-pub fn execute(args: [][:0]u8, projectDir: []const u8, allocator: std.mem.Allocator) CloneError!void {
-    if (args.len < 3) return CloneError.MissingURI;
-    const uri = args[2];
+pub fn execute(uri: []const u8, projectDir: []const u8, allocator: std.mem.Allocator) CloneError!void {
 
     const subDir = try getSubDir(uri, allocator);
     defer allocator.free(subDir);

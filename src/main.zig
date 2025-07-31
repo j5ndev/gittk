@@ -1,38 +1,72 @@
+const clap = @import("clap");
 const std = @import("std");
 const gittk = @import("gittk");
 
+// These are our subcommands.
+const SubCommands = enum {
+    help,
+    clone,
+};
+
+const main_parsers = .{
+    .command = clap.parsers.enumeration(SubCommands),
+};
+
+// The parameters for `main`. Parameters for the subcommands are specified further down.
+const main_params = clap.parseParamsComptime(
+    \\-h, --help  Display this help and exit.
+    \\clone
+);
+
+// To pass around arguments returned by clap, `clap.Result` and `clap.ResultEx` can be used to
+// get the return type of `clap.parse` and `clap.parseEx`.
+const MainArgs = clap.ResultEx(clap.Help, &main_params, main_parsers);
+
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    const args = gittk.getArgs(allocator) catch |err| {
-        switch (err) {
-            gittk.ArgsError.ArgsAlloc => std.debug.print("Error: Could not parse arguments.\n", .{}),
-            gittk.ArgsError.CommandIsMissing => std.debug.print("Error: Command is missing.\n", .{}),
-        }
-        std.process.exit(1);
-    };
-    //defer std.process.argsFree(allocator, args);
-    //Would slow program close
+    var gpa_state = std.heap.GeneralPurposeAllocator(.{}){};
+    const gpa = gpa_state.allocator();
+    defer _ = gpa_state.deinit();
 
-    const Commands = enum {
-        clone,
-        @"An unknown command",
-    };
+        var iter = try std.process.ArgIterator.initWithAllocator(gpa);
+    defer iter.deinit();
 
-    const commandString = args[1];
-    const command = std.meta.stringToEnum(Commands, commandString) orelse .@"An unknown command";
+    _ = iter.next();
+
+    var diag = clap.Diagnostic{};
+    var res = clap.parseEx(clap.Help, &main_params, main_parsers, &iter, .{
+        .diagnostic = &diag,
+        .allocator = gpa,
+
+        // Terminate the parsing of arguments after parsing the first positional (0 is passed
+        // here because parsed positionals are, like slices and arrays, indexed starting at 0).
+        //
+        // This will terminate the parsing after parsing the subcommand enum and leave `iter`
+        // not fully consumed. It can then be reused to parse the arguments for subcommands.
+        .terminating_positional = 0,
+    }) catch |err| {
+        try diag.reportToFile(.stderr(), err);
+        return err;
+    };
+    defer res.deinit();
+
+    if (res.args.help != 0)
+        std.debug.print("--help\n", .{});
+
+    const command = res.positionals[0] orelse return std.debug.print("Error: No command was given.");
     switch (command) {
+        .help => std.debug.print("--help\n", .{}),
         .clone => {
             //TODO: support more platforms
             const homeDir = std.posix.getenv("HOME") orelse {
                 std.debug.print("Error: Unable to identify HOME directory", .{});
                 std.process.exit(1);
             };
-            const projectDir = try std.fs.path.join(allocator, &[_][]const u8{ homeDir, "projects" });
-            gittk.clone.execute(args, projectDir, allocator) catch |err| {
+            const projectDir = try std.fs.path.join(gpa, &[_][]const u8{ homeDir, "projects" });
+            // defer gpa.free(projectDir); collection on program close
+            const uri = res.positionals[1] orelse return std.debug.print("Error: The clone command requires a URI.");
+            gittk.clone.execute(uri, projectDir, gpa) catch |err| {
                 switch (err) {
-                    gittk.clone.CloneError.MissingURI => std.debug.print("Error: The URI for git clone command must be provided.\n", .{}),
-                    gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{args[2]}),
+                    gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{uri}),
                     gittk.clone.CloneError.UnknownURI => std.debug.print("Error: The URI for the git clone command is in an unknown format.\n", .{}),
                     gittk.clone.CloneError.ProcessSpawn => std.debug.print("Error: There was an issue executing the command.\n", .{}),
                     gittk.clone.CloneError.ProcessWait => std.debug.print("Error: There was an issue waiting for the command to finish.\n", .{}),
@@ -40,10 +74,6 @@ pub fn main() !void {
                 }
                 std.process.exit(1);
             };
-        },
-        .@"An unknown command" => {
-            std.debug.print("Error: Command \"{s}\" is unknown.\n", .{commandString});
-            std.process.exit(1);
         },
     }
 }
