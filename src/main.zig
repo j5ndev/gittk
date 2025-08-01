@@ -2,11 +2,10 @@ const clap = @import("clap");
 const std = @import("std");
 const gittk = @import("gittk");
 
+const version = "0.1";
+
 // These are our subcommands.
-const SubCommands = enum {
-    help,
-    clone,
-};
+const SubCommands = enum { clone, help, version };
 
 const main_parsers = .{
     .command = clap.parsers.enumeration(SubCommands),
@@ -15,19 +14,16 @@ const main_parsers = .{
 // The parameters for `main`. Parameters for the subcommands are specified further down.
 const main_params = clap.parseParamsComptime(
     \\-h, --help  Display this help and exit.
+    \\-v, --version Display the version and exit.
     \\<command>
 );
-
-// To pass around arguments returned by clap, `clap.Result` and `clap.ResultEx` can be used to
-// get the return type of `clap.parse` and `clap.parseEx`.
-const MainArgs = clap.ResultEx(clap.Help, &main_params, main_parsers);
 
 pub fn main() !void {
     var gpa_state = std.heap.GeneralPurposeAllocator(.{}){};
     const gpa = gpa_state.allocator();
     defer _ = gpa_state.deinit();
 
-        var iter = try std.process.ArgIterator.initWithAllocator(gpa);
+    var iter = try std.process.ArgIterator.initWithAllocator(gpa);
     defer iter.deinit();
 
     _ = iter.next();
@@ -36,12 +32,6 @@ pub fn main() !void {
     var res = clap.parseEx(clap.Help, &main_params, main_parsers, &iter, .{
         .diagnostic = &diag,
         .allocator = gpa,
-
-        // Terminate the parsing of arguments after parsing the first positional (0 is passed
-        // here because parsed positionals are, like slices and arrays, indexed starting at 0).
-        //
-        // This will terminate the parsing after parsing the subcommand enum and leave `iter`
-        // not fully consumed. It can then be reused to parse the arguments for subcommands.
         .terminating_positional = 0,
     }) catch |err| {
         try diag.reportToFile(.stderr(), err);
@@ -49,22 +39,17 @@ pub fn main() !void {
     };
     defer res.deinit();
 
-    if (res.args.help != 0)
-        std.debug.print("--help\n", .{});
-
-    const command = res.positionals[0] orelse return std.debug.print("Error: No command was given.\n", .{});
-    switch (command) {
-        .help => std.debug.print("--help\n", .{}),
-        .clone => try cloneMain(gpa, &iter, res),
-    }
+    const command = res.positionals[0] orelse .help;
+    try switch (command) {
+        .help => clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
+        .clone => try cloneMain(gpa, &iter),
+        .version => std.debug.print("{s}\n", .{version}),
+    };
 }
 
-fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, main_args: MainArgs) !void {
-    // The parent arguments are not used here, but there are cases where it might be useful, so
-    // this example shows how to pass the arguments around.
-    _ = main_args;
+fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator) !void {
 
-    // The parameters for the subcommand.
+    // The parameters for the clone subcommand.
     const params = comptime clap.parseParamsComptime(
         \\-h, --help  Display this help and exit.
         \\<str>
