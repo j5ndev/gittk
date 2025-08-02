@@ -14,7 +14,6 @@ const main_parsers = .{
 // The parameters for `main`. Parameters for the subcommands are specified further down.
 const main_params = clap.parseParamsComptime(
     \\-h, --help  Display this help and exit.
-    \\-v, --version Display the version and exit.
     \\<command>
 );
 
@@ -34,17 +33,20 @@ pub fn main() !void {
         .allocator = gpa,
         .terminating_positional = 0,
     }) catch |err| {
-        try diag.reportToFile(.stderr(), err);
-        return err;
+        switch (err) {
+            clap.parsers.EnumError.NameNotPartOfEnum => std.debug.print("Error: Unknown command\n", .{}),
+            else => try diag.reportToFile(.stderr(), err),
+        }
+        std.process.exit(1);
     };
     defer res.deinit();
 
     const command = res.positionals[0] orelse .help;
-    try switch (command) {
-        .help => clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
+    switch (command) {
+        .help => try clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
         .clone => try cloneMain(gpa, &iter),
         .version => std.debug.print("{s}\n", .{version}),
-    };
+    }
 }
 
 fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator) !void {
