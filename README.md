@@ -71,7 +71,31 @@ and the repository exists.
 
 /home/mj/projects/github.com/ziglang/doesnotexist
 ```
+### gittk tree
 
+Execute the tree command, two levels deep, on the project directory.
+This command requires `tree` to be on PATH.
+
+```sh
+gittk tree
+```
+#### Example of gittk tree
+
+```sh
+$ zig-out/bin/gittk tree                      
+/home/mj/projects
+├── codeberg.org
+│   ├── j5ndev
+│   └── pepomija
+└── github.com
+    ├── Alkaid-Benetnash
+    ├── ghostty-org
+    ├── j5ndev
+    ├── nektro
+    ├── pepomija
+    ├── ziglang
+    └── zigtools
+```
 ## Test
 
 Execute all tests with the following command.

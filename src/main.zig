@@ -5,7 +5,7 @@ const gittk = @import("gittk");
 const version = "0.1";
 
 // These are our subcommands.
-const SubCommands = enum { clone, help, version };
+const SubCommands = enum { clone, help, tree, version };
 
 const main_parsers = .{
     .command = clap.parsers.enumeration(SubCommands),
@@ -43,9 +43,8 @@ pub fn main() !void {
     };
     defer res.deinit();
 
-
-    var projectDir:[]const u8 = undefined;
-    var freeProjectDir:bool = false;
+    var projectDir: []const u8 = undefined;
+    var freeProjectDir: bool = false;
     if (res.args.project) |p| {
         // Override project directory from arg
 
@@ -65,17 +64,44 @@ pub fn main() !void {
         projectDir = try std.fs.path.join(gpa, &[_][]const u8{ homeDir, "projects" });
         freeProjectDir = true;
     }
-    defer if(freeProjectDir) gpa.free(projectDir);
+    defer if (freeProjectDir) gpa.free(projectDir);
 
     const command = res.positionals[0] orelse .help;
     switch (command) {
         .help => try clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
         .clone => try cloneMain(gpa, &iter, projectDir),
+        .tree => try treeMain(gpa, &iter, projectDir),
         .version => std.debug.print("{s}\n", .{version}),
     }
 }
 
-fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8 ) !void {
+fn treeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8) !void {
+    // The parameters for the tree subcommand.
+    const params = comptime clap.parseParamsComptime(
+        \\-h, --help  Display this help and exit.
+    );
+
+    // Here we pass the partially parsed argument iterator.
+    var diag = clap.Diagnostic{};
+    var res = clap.parseEx(clap.Help, &params, clap.parsers.default, iter, .{
+        .diagnostic = &diag,
+        .allocator = gpa,
+    }) catch |err| {
+        try diag.reportToFile(.stderr(), err);
+        return err; // propagate error
+    };
+    defer res.deinit();
+
+    gittk.tree.execute(projectDir, gpa) catch |err| {
+        switch (err) {
+            gittk.tree.TreeError.ProcessSpawn => std.debug.print("Error: There was an issue executing the command.\n", .{}),
+            gittk.tree.TreeError.ProcessWait => std.debug.print("Error: There was an issue waiting for the command to finish.\n", .{}),
+        }
+        std.process.exit(1);
+    };
+}
+
+fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8) !void {
 
     // The parameters for the clone subcommand.
     const params = comptime clap.parseParamsComptime(
