@@ -45,9 +45,13 @@ pub fn main() !void {
 
 
     var projectDir:[]const u8 = undefined;
-
+    var freeProjectDir:bool = false;
     if (res.args.project) |p| {
-        // Override project directory
+        // Override project directory from arg
+
+        projectDir = p;
+    } else if (std.posix.getenv("GITTK_PROJECT")) |p| {
+        // Override project directory from env
 
         projectDir = p;
     } else {
@@ -59,8 +63,9 @@ pub fn main() !void {
             std.process.exit(1);
         };
         projectDir = try std.fs.path.join(gpa, &[_][]const u8{ homeDir, "projects" });
+        freeProjectDir = true;
     }
-    defer if(res.args.project == null) gpa.free(projectDir);
+    defer if(freeProjectDir) gpa.free(projectDir);
 
     const command = res.positionals[0] orelse .help;
     switch (command) {

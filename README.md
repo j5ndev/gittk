@@ -12,7 +12,7 @@ zig build
 ## Execute
 Only POSIX environments are currently supported.
 
-### Clone
+### gittk clone <value>
 
 Clone repositories into a tree structure under the default $HOME/projects.
 Both relative and absolute paths are supported.
@@ -21,12 +21,20 @@ Both relative and absolute paths are supported.
 zig-out/bin/gittk clone git@github.com:ziglang/zig.git
 ```
 
-### Clone --project
+### gittk --project=<value> clone <value>
 
-Clone repositories into a different path other than the default $HOME/projects.
+Clone repositories into a different path other than the default $HOME/projects using the `--project`, `-p` option.
 
 ```sh
 zig-out/bin/gittk --project=/tmp/gittk clone git@github.com:ziglang/zig.git
+```
+
+### env GITTK_PROJECT=<value> gittk clone <value>
+
+Clone repositories into a different path other than the default $HOME/projects using the `GITTK_PROJECT` environment variable.
+
+```sh
+env GITTK_PROJECT=/tmp/gittk66 zig-out/bin/gittk clone git@github.com:ziglang/zig.git
 ```
 
 #### Example when the cloned repository does not exist locally
