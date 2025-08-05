@@ -14,10 +14,19 @@ Only POSIX environments are currently supported.
 
 ### Clone
 
-Clone repositories into a tree structure under $HOME/projects.
+Clone repositories into a tree structure under the default $HOME/projects.
+Both relative and absolute paths are supported.
 
 ```sh
-zig-out/bin/gittk clone a/b/c
+zig-out/bin/gittk clone git@github.com:ziglang/zig.git
+```
+
+### Clone --project
+
+Clone repositories into a different path other than the default $HOME/projects.
+
+```sh
+zig-out/bin/gittk --project=/tmp/gittk clone git@github.com:ziglang/zig.git
 ```
 
 #### Example when the cloned repository does not exist locally

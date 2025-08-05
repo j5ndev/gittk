@@ -9,11 +9,13 @@ const SubCommands = enum { clone, help, version };
 
 const main_parsers = .{
     .command = clap.parsers.enumeration(SubCommands),
+    .str = clap.parsers.string,
 };
 
 // The parameters for `main`. Parameters for the subcommands are specified further down.
 const main_params = clap.parseParamsComptime(
     \\-h, --help  Display this help and exit.
+    \\-p, --project <str> The project directory.  It will override the default of $HOME/projects.
     \\<command>
 );
 
@@ -41,15 +43,34 @@ pub fn main() !void {
     };
     defer res.deinit();
 
+
+    var projectDir:[]const u8 = undefined;
+
+    if (res.args.project) |p| {
+        // Override project directory
+
+        projectDir = p;
+    } else {
+        // Default project directory
+
+        //TODO: Support more platforms
+        const homeDir = std.posix.getenv("HOME") orelse {
+            std.debug.print("Error: Unable to identify HOME directory", .{});
+            std.process.exit(1);
+        };
+        projectDir = try std.fs.path.join(gpa, &[_][]const u8{ homeDir, "projects" });
+    }
+    defer if(res.args.project == null) gpa.free(projectDir);
+
     const command = res.positionals[0] orelse .help;
     switch (command) {
         .help => try clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
-        .clone => try cloneMain(gpa, &iter),
+        .clone => try cloneMain(gpa, &iter, projectDir),
         .version => std.debug.print("{s}\n", .{version}),
     }
 }
 
-fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator) !void {
+fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8 ) !void {
 
     // The parameters for the clone subcommand.
     const params = comptime clap.parseParamsComptime(
@@ -72,16 +93,7 @@ fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator) !void {
         std.debug.print("Error: The clone command requires a URI.\n", .{});
         std.process.exit(1);
     };
-    if (res.args.help != 0)
-        std.debug.print("--help\n", .{});
 
-    //TODO: support more platforms
-    const homeDir = std.posix.getenv("HOME") orelse {
-        std.debug.print("Error: Unable to identify HOME directory", .{});
-        std.process.exit(1);
-    };
-    const projectDir = try std.fs.path.join(gpa, &[_][]const u8{ homeDir, "projects" });
-    defer gpa.free(projectDir);
     gittk.clone.execute(uri, projectDir, gpa) catch |err| {
         switch (err) {
             gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{uri}),
