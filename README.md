@@ -73,7 +73,7 @@ and the repository exists.
 ```
 ### gittk tree
 
-Execute the tree command, two levels deep, on the project directory.
+Execute the tree command, three levels deep, on the project directory.
 This command requires `tree` to be on PATH.
 
 ```sh
@@ -82,19 +82,42 @@ gittk tree
 #### Example of gittk tree
 
 ```sh
-$ zig-out/bin/gittk tree                      
 /home/mj/projects
 ├── codeberg.org
 │   ├── j5ndev
+│   │   ├── gittk
+│   │   ├── rayliblab
+│   │   ├── weblab
+│   │   └── ziglings_exercises
 │   └── pepomija
+│       └── pandora
 └── github.com
     ├── Alkaid-Benetnash
+    │   └── EmuBTHID
+    ├── blythinart
+    │   └── blythinart.github.io
     ├── ghostty-org
+    │   └── ghostty
     ├── j5ndev
+    │   ├── exercism
+    │   ├── gittk
+    │   ├── kata
+    │   ├── rayliblab
+    │   ├── terminal
+    │   ├── weblab
+    │   ├── ziglab
+    │   └── ziglings_exercises
     ├── nektro
+    │   └── zigmod
     ├── pepomija
+    │   ├── game-aster
+    │   ├── habitual
+    │   └── pandora
     ├── ziglang
+    │   ├── runner
+    │   └── zig
     └── zigtools
+        └── zls
 ```
 ## Test
 
