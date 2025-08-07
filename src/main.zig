@@ -5,7 +5,7 @@ const gittk = @import("gittk");
 const version = "0.1";
 
 // These are our subcommands.
-const SubCommands = enum { clone, help, tree, version };
+const SubCommands = enum { clone, help, ls, tree, version };
 
 const main_parsers = .{
     .command = clap.parsers.enumeration(SubCommands),
@@ -71,8 +71,34 @@ pub fn main() !void {
         .help => try clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
         .clone => try cloneMain(gpa, &iter, projectDir),
         .tree => try treeMain(gpa, &iter, projectDir),
+        .ls  => try listMain(gpa, &iter, projectDir),
         .version => std.debug.print("{s}\n", .{version}),
     }
+}
+
+fn listMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8) !void {
+    // The parameters for the list subcommand.
+    const params = comptime clap.parseParamsComptime(
+        \\-h, --help  Display this help and exit.
+    );
+
+    // Here we pass the partially parsed argument iterator.
+    var diag = clap.Diagnostic{};
+    var res = clap.parseEx(clap.Help, &params, clap.parsers.default, iter, .{
+        .diagnostic = &diag,
+        .allocator = gpa,
+    }) catch |err| {
+        try diag.reportToFile(.stderr(), err);
+        return err; // propagate error
+    };
+    defer res.deinit();
+
+    gittk.list.execute(projectDir, gpa) catch |err| {
+        switch (err) {
+            gittk.list.ListError.NotImplemented => std.debug.print("Error: The list command has not yet been implemented.\n", .{}),
+        }
+        std.process.exit(1);
+    };
 }
 
 fn treeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8) !void {
