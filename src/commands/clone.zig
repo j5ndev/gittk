@@ -28,8 +28,8 @@ pub fn execute(uri: []const u8, projectDir: []const u8, allocator: std.mem.Alloc
 
     // Output the target directory that was created or already existed
     // This output allows an easy way to cd into the target folder when the gittk clone command is used from a shell script
-    var stdout = std.fs.File.stdout().writerStreaming(&.{});
-    stdout.interface.print("\n{s}\n", .{targetDir}) catch return CloneError.TargetDirectory;
+    var stdout = std.io.getStdOut().writer();
+    stdout.print("\n{s}\n", .{targetDir}) catch return CloneError.TargetDirectory;
 }
 
 // Parse URI to determine subfolders 
@@ -42,10 +42,10 @@ fn getSubDir(uri: []const u8, allocator: std.mem.Allocator) CloneError![]const u
     fragment = std.mem.trimRight(u8, fragment, ".");
     if (std.mem.startsWith(u8, uri, "git@")) {
         //One call using "git@" caused an issue and these separate calls were the work around
-        fragment = std.mem.trimStart(u8, fragment, "git");
-        fragment = std.mem.trimStart(u8, fragment, "@");
+        fragment = std.mem.trimLeft(u8, fragment, "git");
+        fragment = std.mem.trimLeft(u8, fragment, "@");
     } else if (std.mem.startsWith(u8, uri, "https://")) {
-        fragment = std.mem.trimStart(u8, fragment, "https://");
+        fragment = std.mem.trimLeft(u8, fragment, "https://");
     } else {
         return CloneError.UnknownURI;
     }

@@ -33,13 +33,16 @@ pub fn main() !void {
     var res = clap.parseEx(clap.Help, &main_params, main_parsers, &iter, .{
         .diagnostic = &diag,
         .allocator = gpa,
+
+        // Terminate the parsing of arguments after parsing the first positional (0 is passed
+        // here because parsed positionals are, like slices and arrays, indexed starting at 0).
+        //
+        // This will terminate the parsing after parsing the subcommand enum and leave `iter`
+        // not fully consumed. It can then be reused to parse the arguments for subcommands.
         .terminating_positional = 0,
     }) catch |err| {
-        switch (err) {
-            clap.parsers.EnumError.NameNotPartOfEnum => std.debug.print("Error: Unknown command\n", .{}),
-            else => try diag.reportToFile(.stderr(), err),
-        }
-        std.process.exit(1);
+        diag.report(std.io.getStdErr().writer(), err) catch {};
+        return err;
     };
     defer res.deinit();
 
@@ -68,7 +71,7 @@ pub fn main() !void {
 
     const command = res.positionals[0] orelse .help;
     switch (command) {
-        .help => try clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
+        .help => std.debug.print("--help\n", .{}),
         .clone => try cloneMain(gpa, &iter, projectDir),
         .tree => try treeMain(gpa, &iter, projectDir),
         .ls  => try listMain(gpa, &iter, projectDir),
@@ -88,8 +91,8 @@ fn listMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
         .diagnostic = &diag,
         .allocator = gpa,
     }) catch |err| {
-        try diag.reportToFile(.stderr(), err);
-        return err; // propagate error
+        diag.report(std.io.getStdErr().writer(), err) catch {};
+        return err;
     };
     defer res.deinit();
 
@@ -102,14 +105,13 @@ fn treeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
         \\-h, --help  Display this help and exit.
     );
 
-    // Here we pass the partially parsed argument iterator.
     var diag = clap.Diagnostic{};
     var res = clap.parseEx(clap.Help, &params, clap.parsers.default, iter, .{
         .diagnostic = &diag,
         .allocator = gpa,
     }) catch |err| {
-        try diag.reportToFile(.stderr(), err);
-        return err; // propagate error
+        diag.report(std.io.getStdErr().writer(), err) catch {};
+        return err;
     };
     defer res.deinit();
 
@@ -136,8 +138,8 @@ fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir:
         .diagnostic = &diag,
         .allocator = gpa,
     }) catch |err| {
-        try diag.reportToFile(.stderr(), err);
-        return err; // propagate error
+        diag.report(std.io.getStdErr().writer(), err) catch {};
+        return err;
     };
     defer res.deinit();
 

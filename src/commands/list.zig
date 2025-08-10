@@ -9,7 +9,7 @@ const Entry = struct {
 
 // Execute the list command
 pub fn execute(projectDir: []const u8, allocator: std.mem.Allocator) !void {
-    var dir = try std.fs.openDirAbsolute(projectDir, .{ .iterate = true });
+    var dir = try std.fs.cwd().openDir("src", .{ .iterate = true });
     defer dir.close(); 
 
     var entries = std.ArrayList(Entry).init(allocator);
