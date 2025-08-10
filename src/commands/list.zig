@@ -8,8 +8,8 @@ const Entry = struct {
 };
 
 // Execute the list command
-pub fn execute(projectDir: []const u8, allocator: std.mem.Allocator) ListError!void {
-    var dir = try std.fs.cwd().openDir(projectDir, .{ .iterate = true });
+pub fn execute(projectDir: []const u8, allocator: std.mem.Allocator) !void {
+    var dir = try std.fs.openDirAbsolute(projectDir, .{ .iterate = true });
     defer dir.close(); 
 
     var entries = std.ArrayList(Entry).init(allocator);
@@ -19,6 +19,7 @@ pub fn execute(projectDir: []const u8, allocator: std.mem.Allocator) ListError!v
         }
         entries.deinit();
     }
+    std.debug.print("item count: {}, projectDir: {s}\n", .{entries.items.len, projectDir});
     for (entries.items) |entry| {
         const full_len = projectDir.len + 1 + entry.name.len;
         var path_buf = try allocator.alloc(u8, full_len);
@@ -31,7 +32,7 @@ pub fn execute(projectDir: []const u8, allocator: std.mem.Allocator) ListError!v
         if (entry.kind == .directory) {
             try execute (sub_path, allocator);
         } else {
-            std.debug.print("{s}\n", sub_path);
+            std.debug.print("{s}\n", .{sub_path});
         }
     }
 }

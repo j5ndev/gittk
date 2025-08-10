@@ -93,12 +93,7 @@ fn listMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
     };
     defer res.deinit();
 
-    gittk.list.execute(projectDir, gpa) catch |err| {
-        switch (err) {
-            gittk.list.ListError.NotImplemented => std.debug.print("Error: The list command has not yet been implemented.\n", .{}),
-        }
-        std.process.exit(1);
-    };
+    try gittk.list.execute(projectDir, gpa);
 }
 
 fn treeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8) !void {
