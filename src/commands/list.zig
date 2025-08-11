@@ -9,30 +9,22 @@ const Entry = struct {
 
 // Execute the list command
 pub fn execute(projectDir: []const u8, allocator: std.mem.Allocator) !void {
-    var dir = try std.fs.openDirAbsolute(projectDir, .{ .iterate = true });
-    defer dir.close(); 
-
-    var entries = std.ArrayList(Entry).init(allocator);
-    defer {
-        for (entries.items) |entry| {
-            allocator.free(entry.name);
-        }
-        entries.deinit();
-    }
-    std.debug.print("item count: {}, projectDir: {s}\n", .{entries.items.len, projectDir});
-    for (entries.items) |entry| {
-        const full_len = projectDir.len + 1 + entry.name.len;
-        var path_buf = try allocator.alloc(u8, full_len);
-        defer allocator.free(path_buf);
-
-        std.mem.copyForwards(u8, path_buf[0..projectDir.len], projectDir);
-        path_buf[projectDir.len] = '/';
-        std.mem.copyForwards(u8, path_buf[projectDir.len + 1 ..], entry.name);
-        const sub_path = path_buf[0..full_len];
-        if (entry.kind == .directory) {
-            try execute (sub_path, allocator);
-        } else {
-            std.debug.print("{s}\n", .{sub_path});
-        }
-    }
+    try printAtDepth(projectDir, 0, allocator);
 }
+
+// Print path of directories when depth == 2
+fn printAtDepth(dirName: []const u8, depth: u8, allocator: std.mem.Allocator) !void {
+    var dir = try std.fs.cwd().openDir(dirName, .{ .iterate = true });
+    defer dir.close();
+    var dirIterator = dir.iterate();
+    while (try dirIterator.next()) |dirContent| if (dirContent.kind == .directory) {
+        const subDir = try std.fs.path.join(allocator, &[_][]const u8{ dirName, dirContent.name });
+        defer allocator.free(subDir);
+        if (depth == 2) {
+            std.debug.print("{s}\n", .{subDir});
+        } else {
+            try printAtDepth(subDir, depth + 1, allocator);
+        }
+    };
+}
+

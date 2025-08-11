@@ -40,7 +40,7 @@ env GITTK_PROJECT=/tmp/gittk66 zig-out/bin/gittk clone git@github.com:ziglang/zi
 #### Example when the cloned repository does not exist locally
 ```zig
 $ zig-out/bin/gittk clone git@github.com:ziglang/zig.git   
-Cloning into '/home/mj/projects/github.com/ziglang/zig'...
+Cloning into '/home/user/projects/github.com/ziglang/zig'...
 remote: Enumerating objects: 332686, done.
 remote: Counting objects: 100% (517/517), done.
 remote: Compressing objects: 100% (199/199), done.
@@ -49,27 +49,27 @@ Receiving objects: 100% (332686/332686), 351.28 MiB | 2.46 MiB/s, done.
 Resolving deltas: 100% (252669/252669), done.
 Updating files: 100% (20604/20604), done.
 
-/home/mj/projects/github.com/ziglang/zig
+/home/user/projects/github.com/ziglang/zig
 ```
 #### Example when the cloned repository already exists locally
 ```zig
 $ zig-out/bin/gittk clone git@github.com:ziglang/zig.git
-fatal: destination path '/home/mj/projects/github.com/ziglang/zig' already exists and is not an empty directory.
+fatal: destination path '/home/user/projects/github.com/ziglang/zig' already exists and is not an empty directory.
 
-/home/mj/projects/github.com/ziglang/zig
+/home/user/projects/github.com/ziglang/zig
 ```
 
 #### Example when the cloned repository does not exist remotely
 ```zig
 $ zig-out/bin/gittk clone git@github.com:ziglang/doesnotexist.git
-Cloning into '/home/mj/projects/github.com/ziglang/doesnotexist'...
+Cloning into '/home/user/projects/github.com/ziglang/doesnotexist'...
 ERROR: Repository not found.
 fatal: Could not read from remote repository.
 
 Please make sure you have the correct access rights
 and the repository exists.
 
-/home/mj/projects/github.com/ziglang/doesnotexist
+/home/user/projects/github.com/ziglang/doesnotexist
 ```
 ### gittk tree
 
@@ -82,7 +82,7 @@ gittk tree
 #### Example of gittk tree
 
 ```sh
-/home/mj/projects
+/home/user/projects
 ├── codeberg.org
 │   ├── j5ndev
 │   │   ├── gittk
@@ -119,6 +119,44 @@ gittk tree
     └── zigtools
         └── zls
 ```
+
+### gittk ls
+
+Execute the ls command.  All repository directories will be listed.
+
+```sh
+gittk ls
+```
+
+#### Example of gittk ls
+
+```
+$ zig-out/bin/gittk ls
+/home/user/projects/github.com/Alkaid-Benetnash/EmuBTHID
+/home/user/projects/github.com/j5ndev/gittk
+/home/user/projects/github.com/j5ndev/kata
+/home/user/projects/github.com/j5ndev/rayliblab
+/home/user/projects/github.com/j5ndev/exercism
+/home/user/projects/github.com/j5ndev/terminal
+/home/user/projects/github.com/j5ndev/ziglab
+/home/user/projects/github.com/j5ndev/ziglings_exercises
+/home/user/projects/github.com/j5ndev/weblab
+/home/user/projects/github.com/zigtools/zls
+/home/user/projects/github.com/nektro/zigmod
+/home/user/projects/github.com/ziglang/runner
+/home/user/projects/github.com/ziglang/zig
+/home/user/projects/github.com/pepomija/game-aster
+/home/user/projects/github.com/pepomija/habitual
+/home/user/projects/github.com/pepomija/pandora
+/home/user/projects/github.com/ghostty-org/ghostty
+/home/user/projects/github.com/blythinart/blythinart.github.io
+/home/user/projects/codeberg.org/j5ndev/gittk
+/home/user/projects/codeberg.org/j5ndev/rayliblab
+/home/user/projects/codeberg.org/j5ndev/ziglings_exercises
+/home/user/projects/codeberg.org/j5ndev/weblab
+/home/user/projects/codeberg.org/pepomija/pandora
+```
+
 ## Test
 
 Execute all tests with the following command.
