@@ -2,19 +2,21 @@ const std = @import("std");
 
 pub const CloneError = error{
     UnknownURL,
-    TODOExecute,
-    MemoryIssue,
-    PathIssue,
-    ProcessSpawn,
-    ProcessWait,
-    TargetDirectory,
 };
 
-pub fn execute(url: []const u8, projectDir: []const u8, allocator: std.mem.Allocator) CloneError!void {
+pub const UnknownURLMessage =
+    \\  The URL for the git clone command is in an unknown format. 
+    \\  Use a ssh or https url.
+    \\  Here are examples of valid urls:
+    \\    git@github.com:j5ndev/gittk.git
+    \\    https://github.com/j5ndev/gittk.git
+    \\
+;
 
+pub fn execute(url: []const u8, projectDir: []const u8, allocator: std.mem.Allocator) !void {
     const subDir = try getSubDir(url, allocator);
     defer allocator.free(subDir);
-    const targetDir = std.fs.path.join(allocator, &[_][]const u8{ projectDir, subDir }) catch return CloneError.PathIssue;
+    const targetDir = try std.fs.path.join(allocator, &[_][]const u8{ projectDir, subDir });
     defer allocator.free(targetDir);
 
     // Execute clone command
@@ -23,20 +25,20 @@ pub fn execute(url: []const u8, projectDir: []const u8, allocator: std.mem.Alloc
     const argv = [_][]const u8{ "git", "clone", url, targetDir };
     var proc = std.process.Child.init(&argv, allocator);
     // cleanup is done by calling wait().
-    proc.spawn() catch return CloneError.ProcessSpawn;
-    _ = proc.wait() catch return CloneError.ProcessWait;
+    try proc.spawn();
+    _ = try proc.wait();
 
     // Output the target directory that was created or already existed
     // This output allows an easy way to cd into the target folder when the gittk clone command is used from a shell script
     var stdout = std.fs.File.stdout().writerStreaming(&.{});
-    stdout.interface.print("\n{s}\n", .{targetDir}) catch return CloneError.TargetDirectory;
+    try stdout.interface.print("\n{s}\n", .{targetDir});
 }
 
-// Parse URL to determine subfolders 
+// Parse URL to determine subfolders
 // Example github URLs:
 //   git@github.com:j5ndev/gittk.git
 //   https://github.com/j5ndev/gittk.git
-fn getSubDir(url: []const u8, allocator: std.mem.Allocator) CloneError![]const u8 {
+fn getSubDir(url: []const u8, allocator: std.mem.Allocator) ![]const u8 {
     //One call using ".git" caused an issue and these separate calls were the work around
     var fragment = std.mem.trimRight(u8, url, "git");
     fragment = std.mem.trimRight(u8, fragment, ".");
@@ -50,8 +52,8 @@ fn getSubDir(url: []const u8, allocator: std.mem.Allocator) CloneError![]const u
         return CloneError.UnknownURL;
     }
     var buffer = std.ArrayList(u8).init(allocator);
-    buffer.appendSlice(fragment) catch return CloneError.MemoryIssue;
-    const result = buffer.toOwnedSlice() catch return CloneError.MemoryIssue;
+    try buffer.appendSlice(fragment);
+    const result = try buffer.toOwnedSlice();
     _ = std.mem.replace(u8, fragment, ":", "/", result);
     return result;
 }

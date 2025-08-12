@@ -12,6 +12,14 @@ zig build
 ## Execute
 Only POSIX environments are currently supported.
 
+### gittk --debug
+
+For more information on errors, use the `--debug` option.
+
+```sh
+zig-out/bin/gittk --debug 
+```
+
 ### gittk clone \<value>
 
 Clone repositories into a tree structure under the default $HOME/projects.

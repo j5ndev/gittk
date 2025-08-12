@@ -14,6 +14,7 @@ const main_parsers = .{
 
 // The parameters for `main`. Parameters for the subcommands are specified further down.
 const main_params = clap.parseParamsComptime(
+    \\-d, --debug Debug an issue by showing stack traces
     \\-h, --help  Display this help and exit.
     \\-p, --project <str> The project directory.  It will override the default of $HOME/projects.
     \\<command>
@@ -43,6 +44,8 @@ pub fn main() !void {
     };
     defer res.deinit();
 
+    const debug:bool = res.args.debug == 1;
+
     var projectDir: []const u8 = undefined;
     var freeProjectDir: bool = false;
     if (res.args.project) |p| {
@@ -66,14 +69,30 @@ pub fn main() !void {
     }
     defer if (freeProjectDir) gpa.free(projectDir);
 
-    const command = res.positionals[0] orelse .help;
-    switch (command) {
-        .help => try clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
-        .clone => try cloneMain(gpa, &iter, projectDir),
-        .tree => try treeMain(gpa, &iter, projectDir),
-        .ls  => try listMain(gpa, &iter, projectDir),
-        .version => std.debug.print("{s}\n", .{version}),
+    if (debug) {
+        std.debug.print("Project Directory: {s}\n", .{projectDir});
     }
+
+    const command = res.positionals[0] orelse .help;
+    _ = switch (command) {
+        .help => clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
+        .clone => cloneMain(gpa, &iter, projectDir),
+        .tree => treeMain(gpa, &iter, projectDir),
+        .ls  => listMain(gpa, &iter, projectDir),
+        .version => std.debug.print("{s}\n", .{version}),
+    } catch |err| {
+        switch (err) {
+            gittk.clone.CloneError.UnknownURL => std.debug.print("Error:\n{s}\n", .{gittk.clone.UnknownURLMessage}),
+            else => {
+                if (!debug) std.debug.print("Error: {any}\n",.{err});
+            }
+        }
+        if (debug) {
+            return err;
+        } else {
+            std.process.exit(1);
+        }
+    };
 }
 
 fn listMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8) !void {
@@ -90,7 +109,7 @@ fn listMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
         .allocator = gpa,
     }) catch |err| {
         try diag.reportToFile(.stderr(), err);
-        return err; // propagate error
+        return err;
     };
     defer res.deinit();
 
@@ -110,17 +129,11 @@ fn treeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
         .allocator = gpa,
     }) catch |err| {
         try diag.reportToFile(.stderr(), err);
-        return err; // propagate error
+        std.process.exit(1);
     };
     defer res.deinit();
 
-    gittk.tree.execute(projectDir, gpa) catch |err| {
-        switch (err) {
-            gittk.tree.TreeError.ProcessSpawn => std.debug.print("Error: There was an issue executing the command.\n", .{}),
-            gittk.tree.TreeError.ProcessWait => std.debug.print("Error: There was an issue waiting for the command to finish.\n", .{}),
-        }
-        std.process.exit(1);
-    };
+    try gittk.tree.execute(projectDir, gpa);
 }
 
 fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8) !void {
@@ -138,7 +151,7 @@ fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir:
         .allocator = gpa,
     }) catch |err| {
         try diag.reportToFile(.stderr(), err);
-        return err; // propagate error
+        std.process.exit(1);
     };
     defer res.deinit();
 
@@ -147,14 +160,5 @@ fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir:
         std.process.exit(1);
     };
 
-    gittk.clone.execute(url, projectDir, gpa) catch |err| {
-        switch (err) {
-            gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{url}),
-            gittk.clone.CloneError.UnknownURL => std.debug.print("Error: The URL for the git clone command is in an unknown format.\n", .{}),
-            gittk.clone.CloneError.ProcessSpawn => std.debug.print("Error: There was an issue executing the command.\n", .{}),
-            gittk.clone.CloneError.ProcessWait => std.debug.print("Error: There was an issue waiting for the command to finish.\n", .{}),
-            else => std.debug.print("Error: An unexpected issue occurred.", .{}),
-        }
-        std.process.exit(1);
-    };
+    try gittk.clone.execute(url, projectDir, gpa);
 }

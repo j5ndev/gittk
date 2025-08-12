@@ -1,7 +1,5 @@
 const std = @import("std");
 
-pub const ListError = error{};
-
 const Entry = struct {
     name: []const u8,
     kind: std.fs.Dir.Entry.Kind,
