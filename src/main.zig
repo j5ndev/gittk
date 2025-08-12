@@ -80,6 +80,7 @@ fn listMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
     // The parameters for the list subcommand.
     const params = comptime clap.parseParamsComptime(
         \\-h, --help  Display this help and exit.
+        \\-u, --url   Display url of the remote origin
     );
 
     // Here we pass the partially parsed argument iterator.
@@ -93,7 +94,7 @@ fn listMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
     };
     defer res.deinit();
 
-    try gittk.list.execute(projectDir, gpa);
+    try gittk.list.execute(projectDir, res.args.url, gpa);
 }
 
 fn treeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: []const u8) !void {
@@ -141,15 +142,15 @@ fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir:
     };
     defer res.deinit();
 
-    const uri = res.positionals[0] orelse {
-        std.debug.print("Error: The clone command requires a URI.\n", .{});
+    const url = res.positionals[0] orelse {
+        std.debug.print("Error: The clone command requires a URL.\n", .{});
         std.process.exit(1);
     };
 
-    gittk.clone.execute(uri, projectDir, gpa) catch |err| {
+    gittk.clone.execute(url, projectDir, gpa) catch |err| {
         switch (err) {
-            gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{uri}),
-            gittk.clone.CloneError.UnknownURI => std.debug.print("Error: The URI for the git clone command is in an unknown format.\n", .{}),
+            gittk.clone.CloneError.TODOExecute => std.debug.print("TODO: Execute the git clone command using {s}\n", .{url}),
+            gittk.clone.CloneError.UnknownURL => std.debug.print("Error: The URL for the git clone command is in an unknown format.\n", .{}),
             gittk.clone.CloneError.ProcessSpawn => std.debug.print("Error: There was an issue executing the command.\n", .{}),
             gittk.clone.CloneError.ProcessWait => std.debug.print("Error: There was an issue waiting for the command to finish.\n", .{}),
             else => std.debug.print("Error: An unexpected issue occurred.", .{}),

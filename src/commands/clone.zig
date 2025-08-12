@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub const CloneError = error{
-    UnknownURI,
+    UnknownURL,
     TODOExecute,
     MemoryIssue,
     PathIssue,
@@ -10,9 +10,9 @@ pub const CloneError = error{
     TargetDirectory,
 };
 
-pub fn execute(uri: []const u8, projectDir: []const u8, allocator: std.mem.Allocator) CloneError!void {
+pub fn execute(url: []const u8, projectDir: []const u8, allocator: std.mem.Allocator) CloneError!void {
 
-    const subDir = try getSubDir(uri, allocator);
+    const subDir = try getSubDir(url, allocator);
     defer allocator.free(subDir);
     const targetDir = std.fs.path.join(allocator, &[_][]const u8{ projectDir, subDir }) catch return CloneError.PathIssue;
     defer allocator.free(targetDir);
@@ -20,7 +20,7 @@ pub fn execute(uri: []const u8, projectDir: []const u8, allocator: std.mem.Alloc
     // Execute clone command
     // If the repo already exists, a message like the following will be output:
     //   fatal: destination path '/home/mj/projects/github.com/j5ndev/gittk' already exists and is not an empty directory.
-    const argv = [_][]const u8{ "git", "clone", uri, targetDir };
+    const argv = [_][]const u8{ "git", "clone", url, targetDir };
     var proc = std.process.Child.init(&argv, allocator);
     // cleanup is done by calling wait().
     proc.spawn() catch return CloneError.ProcessSpawn;
@@ -32,22 +32,22 @@ pub fn execute(uri: []const u8, projectDir: []const u8, allocator: std.mem.Alloc
     stdout.interface.print("\n{s}\n", .{targetDir}) catch return CloneError.TargetDirectory;
 }
 
-// Parse URI to determine subfolders 
-// Example github URIs:
+// Parse URL to determine subfolders 
+// Example github URLs:
 //   git@github.com:j5ndev/gittk.git
 //   https://github.com/j5ndev/gittk.git
-fn getSubDir(uri: []const u8, allocator: std.mem.Allocator) CloneError![]const u8 {
+fn getSubDir(url: []const u8, allocator: std.mem.Allocator) CloneError![]const u8 {
     //One call using ".git" caused an issue and these separate calls were the work around
-    var fragment = std.mem.trimRight(u8, uri, "git");
+    var fragment = std.mem.trimRight(u8, url, "git");
     fragment = std.mem.trimRight(u8, fragment, ".");
-    if (std.mem.startsWith(u8, uri, "git@")) {
+    if (std.mem.startsWith(u8, url, "git@")) {
         //One call using "git@" caused an issue and these separate calls were the work around
         fragment = std.mem.trimStart(u8, fragment, "git");
         fragment = std.mem.trimStart(u8, fragment, "@");
-    } else if (std.mem.startsWith(u8, uri, "https://")) {
+    } else if (std.mem.startsWith(u8, url, "https://")) {
         fragment = std.mem.trimStart(u8, fragment, "https://");
     } else {
-        return CloneError.UnknownURI;
+        return CloneError.UnknownURL;
     }
     var buffer = std.ArrayList(u8).init(allocator);
     buffer.appendSlice(fragment) catch return CloneError.MemoryIssue;
@@ -56,29 +56,29 @@ fn getSubDir(uri: []const u8, allocator: std.mem.Allocator) CloneError![]const u
     return result;
 }
 
-test "getSubDir correctly parses SSH URI " {
-    const uri = "git@github.com:j5ndev/gittk.git";
+test "getSubDir correctly parses SSH URL " {
+    const url = "git@github.com:j5ndev/gittk.git";
     const allocator = std.testing.allocator;
-    const actual = try getSubDir(uri, allocator);
+    const actual = try getSubDir(url, allocator);
     defer allocator.free(actual);
     const expected = "github.com/j5ndev/gittk";
     try std.testing.expectEqualStrings(expected, actual);
 }
 
-test "getSubDir correctly parses HTTPS URI " {
-    const uri = "https://github.com/j5ndev/gittk.git";
+test "getSubDir correctly parses HTTPS URL " {
+    const url = "https://github.com/j5ndev/gittk.git";
     const allocator = std.testing.allocator;
-    const actual = try getSubDir(uri, allocator);
+    const actual = try getSubDir(url, allocator);
     defer allocator.free(actual);
     const expected = "github.com/j5ndev/gittk";
     try std.testing.expectEqualStrings(expected, actual);
 }
 
-test "getSubDir correctly parses zig repository URI " {
+test "getSubDir correctly parses zig repository URL " {
     // Tests an issue work around that prevents the return of git@github.com:ziglang/z
-    const uri = "git@github.com:ziglang/zig.git";
+    const url = "git@github.com:ziglang/zig.git";
     const allocator = std.testing.allocator;
-    const actual = try getSubDir(uri, allocator);
+    const actual = try getSubDir(url, allocator);
     defer allocator.free(actual);
     const expected = "github.com/ziglang/zig";
     try std.testing.expectEqualStrings(expected, actual);

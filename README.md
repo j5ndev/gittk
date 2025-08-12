@@ -103,7 +103,6 @@ gittk tree
     │   ├── gittk
     │   ├── kata
     │   ├── rayliblab
-    │   ├── terminal
     │   ├── weblab
     │   ├── ziglab
     │   └── ziglings_exercises
@@ -137,7 +136,6 @@ $ zig-out/bin/gittk ls
 /home/user/projects/github.com/j5ndev/kata
 /home/user/projects/github.com/j5ndev/rayliblab
 /home/user/projects/github.com/j5ndev/exercism
-/home/user/projects/github.com/j5ndev/terminal
 /home/user/projects/github.com/j5ndev/ziglab
 /home/user/projects/github.com/j5ndev/ziglings_exercises
 /home/user/projects/github.com/j5ndev/weblab
@@ -155,6 +153,42 @@ $ zig-out/bin/gittk ls
 /home/user/projects/codeberg.org/j5ndev/ziglings_exercises
 /home/user/projects/codeberg.org/j5ndev/weblab
 /home/user/projects/codeberg.org/pepomija/pandora
+```
+
+### gittk ls --url
+
+Execute the ls command with the url option.  All repository remote origin urls will be listed.
+
+```sh
+gittk ls --url
+```
+
+#### Example of gittk ls --url
+
+```sh
+$ zig-out/bin/gittk ls --url
+https://github.com/Alkaid-Benetnash/EmuBTHID.git
+git@github.com:j5ndev/gittk.git
+git@github.com:j5ndev/kata.git
+git@github.com:j5ndev/rayliblab.git
+git@github.com:j5ndev/exercism.git
+git@github.com:j5ndev/ziglab.git
+git@github.com:j5ndev/ziglings_exercises.git
+git@github.com:j5ndev/weblab.git
+git@github.com:zigtools/zls.git
+git@github.com:nektro/zigmod.git
+git@github.com:ziglang/runner.git
+git@github.com:ziglang/zig.git
+git@github.com:pepomija/game-aster.git
+git@github.com:pepomija/habitual.git
+git@github.com:pepomija/pandora.git
+https://github.com/ghostty-org/ghostty.git
+git@github.com:blythinart/blythinart.github.io.git
+git@codeberg.org:j5ndev/gittk.git
+git@codeberg.org:j5ndev/rayliblab.git
+git@github.com:j5ndev/ziglings_exercises.git
+git@codeberg.org:j5ndev/weblab.git
+git@codeberg.org:pepomija/pandora.git
 ```
 
 ## Test
