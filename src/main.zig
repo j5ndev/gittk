@@ -2,7 +2,7 @@ const clap = @import("clap");
 const std = @import("std");
 const gittk = @import("gittk");
 
-const version = "0.1";
+const version = "0.0.1";
 
 // These are our subcommands.
 const SubCommands = enum { clone, help, ls, tree, version };
@@ -70,12 +70,23 @@ pub fn main() !void {
     defer if (freeProjectDir) gpa.free(projectDir);
 
     if (debug) {
-        std.debug.print("Project Directory: {s}\n", .{projectDir});
+        std.debug.print("DEBUG: Project Directory: {s}\n", .{projectDir});
     }
 
     const command = res.positionals[0] orelse .help;
     _ = switch (command) {
-        .help => clap.helpToFile(.stderr(), clap.Help, &main_params, .{}),
+        .help => {
+            try clap.helpToFile(.stderr(), clap.Help, &main_params, .{});
+            std.debug.print(\\ Commands:
+            \\
+            \\  clone    Clone repositority into gittk tree structure under the project directory
+            \\  help     Display this help message
+            \\  ls       Display a list paths to each repository
+            \\  tree     Display a tree summary of all repositories
+            \\  version  Display the version of this executable
+            \\
+            , .{});
+        },
         .clone => cloneMain(gpa, &iter, projectDir),
         .tree => treeMain(gpa, &iter, projectDir),
         .ls  => listMain(gpa, &iter, projectDir),
