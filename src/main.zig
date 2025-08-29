@@ -44,7 +44,7 @@ pub fn main() !void {
     };
     defer res.deinit();
 
-    const debug:bool = res.args.debug == 1;
+    const debug: bool = res.args.debug == 1;
 
     var projectDir: []const u8 = undefined;
     var freeProjectDir: bool = false;
@@ -77,26 +77,27 @@ pub fn main() !void {
     _ = switch (command) {
         .help => {
             try clap.helpToFile(.stderr(), clap.Help, &main_params, .{});
-            std.debug.print(\\ Commands:
-            \\
-            \\  clone    Clone repositority into gittk tree structure under the project directory
-            \\  help     Display this help message
-            \\  ls       Display a list paths to each repository
-            \\  tree     Display a tree summary of all repositories
-            \\  version  Display the version of this executable
-            \\
+            std.debug.print(
+                \\ Commands:
+                \\
+                \\  clone    Clone repositority into gittk tree structure under the project directory
+                \\  help     Display this help message
+                \\  ls       Display a list paths to each repository
+                \\  tree     Display a tree summary of all repositories
+                \\  version  Display the version of this executable
+                \\
             , .{});
         },
         .clone => cloneMain(gpa, &iter, projectDir),
         .tree => treeMain(gpa, &iter, projectDir),
-        .ls  => listMain(gpa, &iter, projectDir),
+        .ls => listMain(gpa, &iter, projectDir),
         .version => std.debug.print("{s}\n", .{version}),
     } catch |err| {
         switch (err) {
             gittk.clone.CloneError.UnknownURL => std.debug.print("Error:\n{s}\n", .{gittk.clone.UnknownURLMessage}),
             else => {
-                if (!debug) std.debug.print("Error: {any}\n",.{err});
-            }
+                if (!debug) std.debug.print("Error: {any}\n", .{err});
+            },
         }
         if (debug) {
             return err;
@@ -124,6 +125,17 @@ fn listMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
     };
     defer res.deinit();
 
+    if (res.args.help != 0) {
+        try clap.helpToFile(.stderr(), clap.Help, &params, .{});
+        std.debug.print(
+            \\
+            \\  Print the list of repository paths under the project directory.
+            \\  Use the --url option to instead list all the repository URLs used to clone each repository.
+            \\
+        , .{});
+        return;
+    }
+
     try gittk.list.execute(projectDir, res.args.url, gpa);
 }
 
@@ -143,6 +155,16 @@ fn treeMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir: 
         std.process.exit(1);
     };
     defer res.deinit();
+
+    if (res.args.help != 0) {
+        try clap.helpToFile(.stderr(), clap.Help, &params, .{});
+        std.debug.print(
+            \\  
+            \\  Print the directory tree under the project directory.
+            \\
+        , .{});
+        return;
+    }
 
     try gittk.tree.execute(projectDir, gpa);
 }
@@ -165,6 +187,16 @@ fn cloneMain(gpa: std.mem.Allocator, iter: *std.process.ArgIterator, projectDir:
         std.process.exit(1);
     };
     defer res.deinit();
+
+    if (res.args.help != 0) {
+        try clap.helpToFile(.stderr(), clap.Help, &params, .{});
+        std.debug.print(
+            \\  
+            \\  Clone the given repository URL into the directory tree under the project directory.
+            \\
+        , .{});
+        return;
+    }
 
     const url = res.positionals[0] orelse {
         std.debug.print("Error: The clone command requires a URL.\n", .{});
