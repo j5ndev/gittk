@@ -51,7 +51,7 @@ fn getSubDir(url: []const u8, allocator: std.mem.Allocator) ![]const u8 {
     } else {
         return CloneError.UnknownURL;
     }
-    var buffer = std.ArrayList(u8).init(allocator);
+    var buffer = std.array_list.Managed(u8).init(allocator);
     try buffer.appendSlice(fragment);
     const result = try buffer.toOwnedSlice();
     _ = std.mem.replace(u8, fragment, ":", "/", result);
