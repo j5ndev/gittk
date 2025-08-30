@@ -81,8 +81,7 @@ and the repository exists.
 ```
 ### gittk tree
 
-Execute the tree command, three levels deep, on the project directory.
-This command requires `tree` to be on PATH.
+Display directory structure three levels deep, on the project directory.
 
 ```sh
 gittk tree
@@ -90,41 +89,41 @@ gittk tree
 #### Example of gittk tree
 
 ```sh
-/home/user/projects
-├── codeberg.org
+/home/mj/projects
+├── github.com
+│   ├── Alkaid-Benetnash
+│   │   └── EmuBTHID
 │   ├── j5ndev
 │   │   ├── gittk
+│   │   ├── kata
 │   │   ├── rayliblab
-│   │   ├── weblab
-│   │   └── ziglings_exercises
-│   └── pepomija
-│       └── pandora
-└── github.com
-    ├── Alkaid-Benetnash
-    │   └── EmuBTHID
-    ├── blythinart
-    │   └── blythinart.github.io
-    ├── ghostty-org
-    │   └── ghostty
+│   │   ├── exercism
+│   │   ├── ziglab
+│   │   ├── ziglings_exercises
+│   │   └── weblab
+│   ├── zigtools
+│   │   └── zls
+│   ├── nektro
+│   │   └── zigmod
+│   ├── ziglang
+│   │   ├── runner
+│   │   └── zig
+│   ├── pepomija
+│   │   ├── game-aster
+│   │   ├── habitual
+│   │   └── pandora
+│   ├── ghostty-org
+│   │   └── ghostty
+│   └── blythinart
+│       └── blythinart.github.io
+└── codeberg.org
     ├── j5ndev
-    │   ├── exercism
     │   ├── gittk
-    │   ├── kata
     │   ├── rayliblab
-    │   ├── weblab
-    │   ├── ziglab
-    │   └── ziglings_exercises
-    ├── nektro
-    │   └── zigmod
-    ├── pepomija
-    │   ├── game-aster
-    │   ├── habitual
-    │   └── pandora
-    ├── ziglang
-    │   ├── runner
-    │   └── zig
-    └── zigtools
-        └── zls
+    │   ├── ziglings_exercises
+    │   └── weblab
+    └── pepomija
+        └── pandora
 ```
 
 ### gittk ls
